@@ -1,35 +1,29 @@
 """Extraction."""
-import configparser
-import datetime
+import json
 import logging
-import pathlib
 import time
-from typing import List
+from typing import Any
 
 import requests
 from requests.exceptions import HTTPError
 
-parser = configparser.ConfigParser()
-parser.read(pathlib.Path("..", "pipeline.conf"))
 
-nyt_key = parser.get("nyt", "key")
-
-
-def fetch_nyt_reviews(url: str, left_boundary: str, right_boundary: str) -> List:
+def _extract_nyt_reviews(
+    url: str, key: str, left_boundary: str, right_boundary: str, **context: Any
+) -> None:
     """Extract NYT movie reviews from movie review API.
 
     Fetch movie reviews in a time frame starting at left_boundary and ending
     at right_boundary. The server only allows for 10 requests per minute so,
     there will be a timeout of one minute in case a 429 status code is
-    encountered.
+    encountered. The result is dumped as json to ./data.
 
     Args:
         url: URL for the NYT movie review API.
+        key: Key for the NYT movie review API.
         left_boundary: Start date, format must be %Y-%m-%d.
         right_boundary: End date, format must be %Y-%m-%d.
-
-    Returns:
-        List: Responses from GET requests.
+        **context: Airflow context variables.
     """
     movies = []
     has_more = True
@@ -40,7 +34,7 @@ def fetch_nyt_reviews(url: str, left_boundary: str, right_boundary: str) -> List
             response = requests.get(
                 url=url + "/reviews/search.json",
                 params={
-                    "api-key": nyt_key,
+                    "api-key": key,
                     "opening-date": f"{left_boundary}:{right_boundary}",
                     "offset": str(offset),
                 },
@@ -64,12 +58,8 @@ def fetch_nyt_reviews(url: str, left_boundary: str, right_boundary: str) -> List
             else:
                 logging.error(err)
 
-    return movies
+    file_name = f"nyt-review-{context['ds']}.json"
+    logging.info(f"Fetched {len(movies)} movie reviews. Writing to {file_name}.")
 
-
-if __name__ == "__main__":
-    movies = fetch_nyt_reviews(
-        url="https://api.nytimes.com/svc/movies/v2",
-        left_boundary="2022-01-01",
-        right_boundary=datetime.datetime.now().strftime("%Y-%m-%d"),
-    )
+    with open(f"/opt/airflow/data/{file_name}", "w") as f:
+        json.dump(movies, f, indent=4)

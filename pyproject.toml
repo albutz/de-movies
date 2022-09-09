@@ -6,6 +6,7 @@ authors = ["Alexander Butz <alex.butz@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+apache-airflow = "^2.3.4"
 
 [tool.poetry.dev-dependencies]
 bpython = "^0.23"

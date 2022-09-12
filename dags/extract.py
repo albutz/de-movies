@@ -2,9 +2,10 @@
 import json
 import logging
 import time
-from typing import Any
+from typing import Any, List
 
 import requests
+from bs4 import BeautifulSoup, SoupStrainer
 from requests.exceptions import HTTPError
 
 
@@ -63,3 +64,24 @@ def _extract_nyt_reviews(
 
     with open(f"/opt/airflow/data/{file_name}", "w") as f:
         json.dump(movies, f, indent=4)
+
+
+def _get_download_links(url: str) -> List[str]:
+    """Get download links from url.
+
+    Parse the site and extract all hrefs that point to zipped files.
+
+    Args:
+        url: The URL for the site to parse.
+
+    Returns:
+        A list of urls.
+    """
+    links = []
+    response = requests.get(url)
+
+    for link in BeautifulSoup(response.content, parse_only=SoupStrainer("a"), features="lxml"):
+        if hasattr(link, "href") and link["href"].endswith("gz"):
+            links.append(link["href"])
+
+    return links

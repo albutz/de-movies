@@ -4,6 +4,8 @@ import logging
 import time
 from typing import Any, List
 
+import numpy as np
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup, SoupStrainer
 from requests.exceptions import HTTPError
@@ -85,3 +87,30 @@ def _get_download_links(url: str) -> List[str]:
             links.append(link["href"])
 
     return links
+
+
+def _extract_imdb_datasets(url: str, ds: str) -> None:
+    """Extract datasets from IMDB.
+
+    Fetch the title.basics and title.ratings datasets from IMDB and dump them
+    as csv.gz to ./data.
+
+    Args:
+        url: URL to get download links via _get_download_links.
+        ds: DAG run's logical date.
+    """
+    tbls = ["title.basics", "title.ratings"]
+    urls = _get_download_links(url)
+    urls = [url for url in urls if any(keep_url in url for keep_url in tbls)]
+    tbl_urls = {tbl: url for tbl, url in zip(tbls, urls)}
+
+    for tbl, url in tbl_urls.items():
+        df = pd.read_table(url, header=0, compression="gzip", low_memory=False)
+
+        # '\\N' encodes missing values
+        df = df.where(df != "\\N", other=np.nan)
+
+        file_name = f"{tbl}-{ds}.csv.gz"
+        logging.info(f"Fetched {df.shape[0]} rows for {tbl}. Writing to {file_name}.")
+
+        df.to_csv(f"/opt/airflow/data/{file_name}", index=False)

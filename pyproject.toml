@@ -5,8 +5,9 @@ description = "Data pipeline for NYT movie reviews"
 authors = ["Alexander Butz <alex.butz@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.9"
 requests = "^2.28.1"
+great-expectations = "^0.15.22"
 
 [tool.poetry.dev-dependencies]
 

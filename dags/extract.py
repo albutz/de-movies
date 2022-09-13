@@ -62,10 +62,13 @@ def _extract_nyt_reviews(
                 logging.error(err)
 
     file_name = f"nyt-review-{context['ds']}.json"
-    logging.info(f"Fetched {len(movies)} movie reviews. Writing to {file_name}.")
 
-    with open(f"/opt/airflow/data/{file_name}", "w") as f:
-        json.dump(movies, f, indent=4)
+    if movies:
+        logging.info(f"Fetched {len(movies)} movie reviews. Writing to {file_name}.")
+        with open(f"/opt/airflow/data/{file_name}", "w") as f:
+            json.dump(movies, f, indent=4)
+    else:
+        logging.info("No reviews available.")
 
 
 def _get_download_links(url: str) -> List[str]:

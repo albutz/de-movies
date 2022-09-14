@@ -10,6 +10,8 @@ import requests
 from bs4 import BeautifulSoup, SoupStrainer
 from requests.exceptions import HTTPError
 
+DATA_DIR = "/opt/airflow/data"
+
 
 def _extract_nyt_reviews(
     url: str, key: str, left_boundary: str, right_boundary: str, **context: Any
@@ -61,11 +63,11 @@ def _extract_nyt_reviews(
             else:
                 logging.error(err)
 
-    file_name = f"nyt-review-{context['ds']}.json"
+    file_name = f"nyt/nyt-review-{context['ds']}.json"
 
     if movies:
         logging.info(f"Fetched {len(movies)} movie reviews. Writing to {file_name}.")
-        with open(f"/opt/airflow/data/{file_name}", "w") as f:
+        with open(f"{DATA_DIR}/{file_name}", "w") as f:
             json.dump(movies, f, indent=4)
     else:
         logging.info("No reviews available.")
@@ -110,7 +112,7 @@ def _extract_imdb_datasets(url: str, ds: str, prev_ds: str) -> None:
 
     for tbl, url in tbl_urls.items():
         df = pd.read_table(url, header=0, compression="gzip")
-        ids_file = f"/opt/airflow/data/ids.{tbl}.csv"
+        ids_file = f"{DATA_DIR}/imdb/ids/ids.{tbl}.csv"
 
         if prev_ds:
             existing_ids = pd.read_csv(ids_file, header=None).squeeze("columns")
@@ -122,7 +124,7 @@ def _extract_imdb_datasets(url: str, ds: str, prev_ds: str) -> None:
         # '\\N' encodes missing values
         df = df.where(df != "\\N", other=np.nan)
 
-        file_name = f"{tbl}-{ds}.csv.gz"
+        file_name = f"imdb/tables/{tbl}-{ds}.csv.gz"
         logging.info(f"Fetched {df.shape[0]} new rows for {tbl}. Writing to {file_name}.")
 
-        df.to_csv(f"/opt/airflow/data/{file_name}", index=False)
+        df.to_csv(f"{DATA_DIR}/{file_name}", index=False)

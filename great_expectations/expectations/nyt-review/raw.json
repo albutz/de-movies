@@ -1,0 +1,253 @@
+{
+  "data_asset_type": null,
+  "expectation_suite_name": "nyt-review.raw",
+  "expectations": [
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "display_title"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_proportion_of_unique_values_to_be_between",
+      "kwargs": {
+        "column": "display_title",
+        "max_value": 1.0,
+        "min_value": 1.0
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "mpaa_rating",
+        "value_set": [
+          "",
+          "G",
+          "PG",
+          "PG-13",
+          "R",
+          "NC-17"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "mpaa_rating"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_type_list",
+      "kwargs": {
+        "column": "mpaa_rating",
+        "type_list": [
+          "CHAR",
+          "NCHAR",
+          "NTEXT",
+          "NVARCHAR",
+          "STRING",
+          "StringType",
+          "StringType()",
+          "TEXT",
+          "VARCHAR",
+          "dtype('O')",
+          "object",
+          "str",
+          "string"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "critics_pick",
+        "value_set": [
+          0,
+          1
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "critics_pick"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_type_list",
+      "kwargs": {
+        "column": "critics_pick",
+        "type_list": [
+          "BIGINT",
+          "BYTEINT",
+          "ByteType()",
+          "INT",
+          "INT64",
+          "INTEGER",
+          "Int16Dtype",
+          "Int32Dtype",
+          "Int64Dtype",
+          "Int8Dtype",
+          "IntegerType",
+          "IntegerType()",
+          "LongType",
+          "LongType()",
+          "SMALLINT",
+          "ShortType()",
+          "TINYINT",
+          "UInt16Dtype",
+          "UInt32Dtype",
+          "UInt64Dtype",
+          "UInt8Dtype",
+          "int",
+          "int16",
+          "int32",
+          "int64",
+          "int8",
+          "int_",
+          "integer",
+          "uint16",
+          "uint32",
+          "uint64",
+          "uint8"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "publication_date"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_type_list",
+      "kwargs": {
+        "column": "publication_date",
+        "type_list": [
+          "CHAR",
+          "NCHAR",
+          "NTEXT",
+          "NVARCHAR",
+          "STRING",
+          "StringType",
+          "StringType()",
+          "TEXT",
+          "VARCHAR",
+          "dtype('O')",
+          "object",
+          "str",
+          "string"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "opening_date"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_type_list",
+      "kwargs": {
+        "column": "opening_date",
+        "type_list": [
+          "CHAR",
+          "NCHAR",
+          "NTEXT",
+          "NVARCHAR",
+          "STRING",
+          "StringType",
+          "StringType()",
+          "TEXT",
+          "VARCHAR",
+          "dtype('O')",
+          "object",
+          "str",
+          "string"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_table_columns_to_match_set",
+      "kwargs": {
+        "column_set": [
+          "display_title",
+          "mpaa_rating",
+          "critics_pick",
+          "byline",
+          "headline",
+          "summary_short",
+          "publication_date",
+          "opening_date",
+          "date_updated",
+          "link",
+          "multimedia"
+        ]
+      },
+      "meta": {}
+    }
+  ],
+  "ge_cloud_id": null,
+  "meta": {
+    "citations": [
+      {
+        "batch_request": {
+          "data_asset_name": "nyt-review-2022-09-13.json",
+          "data_connector_name": "default_inferred_data_connector_name",
+          "datasource_name": "nyt_reviews_raw",
+          "limit": 1000
+        },
+        "citation_date": "2022-09-14T18:48:06.491058Z",
+        "comment": "Created suite added via CLI"
+      }
+    ],
+    "columns": {
+      "byline": {
+        "description": ""
+      },
+      "critics_pick": {
+        "description": ""
+      },
+      "date_updated": {
+        "description": ""
+      },
+      "display_title": {
+        "description": ""
+      },
+      "headline": {
+        "description": ""
+      },
+      "link": {
+        "description": ""
+      },
+      "mpaa_rating": {
+        "description": ""
+      },
+      "multimedia": {
+        "description": ""
+      },
+      "opening_date": {
+        "description": ""
+      },
+      "publication_date": {
+        "description": ""
+      },
+      "summary_short": {
+        "description": ""
+      }
+    },
+    "great_expectations_version": "0.15.22"
+  }
+}

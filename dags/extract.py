@@ -92,15 +92,16 @@ def _get_download_links(url: str) -> List[str]:
     return links
 
 
-def _extract_imdb_datasets(url: str, ds: str) -> None:
+def _extract_imdb_datasets(url: str, ds: str, prev_ds: str) -> None:
     """Extract datasets from IMDB.
 
-    Fetch the title.basics and title.ratings datasets from IMDB and dump them
-    as csv.gz to ./data.
+    Fetch the title.basics and title.ratings datasets from IMDB and dump new
+    rows as csv.gz to ./data.
 
     Args:
         url: URL to get download links via _get_download_links.
         ds: DAG run's logical date.
+        prev_ds: DAG run's previous logical date if exists, else None.
     """
     tbls = ["title.basics", "title.ratings"]
     urls = _get_download_links(url)
@@ -108,12 +109,20 @@ def _extract_imdb_datasets(url: str, ds: str) -> None:
     tbl_urls = {tbl: url for tbl, url in zip(tbls, urls)}
 
     for tbl, url in tbl_urls.items():
-        df = pd.read_table(url, header=0, compression="gzip", low_memory=False)
+        df = pd.read_table(url, header=0, compression="gzip")
+        ids_file = f"/opt/airflow/data/ids.{tbl}.csv"
+
+        if prev_ds:
+            existing_ids = pd.read_csv(ids_file, header=None).squeeze("columns")
+            df = df.loc[~df.tconst.isin(existing_ids)]
+
+        # Append new ids
+        df.tconst.to_csv(ids_file, header=False, index=False, mode="a")
 
         # '\\N' encodes missing values
         df = df.where(df != "\\N", other=np.nan)
 
         file_name = f"{tbl}-{ds}.csv.gz"
-        logging.info(f"Fetched {df.shape[0]} rows for {tbl}. Writing to {file_name}.")
+        logging.info(f"Fetched {df.shape[0]} new rows for {tbl}. Writing to {file_name}.")
 
         df.to_csv(f"/opt/airflow/data/{file_name}", index=False)

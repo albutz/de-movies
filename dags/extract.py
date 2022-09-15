@@ -13,9 +13,7 @@ from requests.exceptions import HTTPError
 DATA_DIR = "/opt/airflow/data"
 
 
-def _extract_nyt_reviews(
-    url: str, key: str, left_boundary: str, right_boundary: str, **context: Any
-) -> None:
+def _extract_nyt_reviews(url: str, key: str, left_boundary: str, right_boundary: str) -> bool:
     """Extract NYT movie reviews from movie review API.
 
     Fetch movie reviews in a time frame starting at left_boundary and ending
@@ -28,7 +26,9 @@ def _extract_nyt_reviews(
         key: Key for the NYT movie review API.
         left_boundary: Start date, format must be %Y-%m-%d.
         right_boundary: End date, format must be %Y-%m-%d.
-        **context: Airflow context variables.
+
+    Returns:
+        Boolean indicating if reviews were dumped.
     """
     movies = []
     has_more = True
@@ -63,14 +63,16 @@ def _extract_nyt_reviews(
             else:
                 logging.error(err)
 
-    file_name = f"nyt/nyt-review-{context['ds']}.json"
+    file_name = "nyt-review.json"
 
     if movies:
         logging.info(f"Fetched {len(movies)} movie reviews. Writing to {file_name}.")
-        with open(f"{DATA_DIR}/{file_name}", "w") as f:
+        with open(f"{DATA_DIR}/nyt/nyt-review.json", "w") as f:
             json.dump(movies, f, indent=4)
     else:
         logging.info("No reviews available.")
+
+    return True if movies else False
 
 
 def _get_download_links(url: str) -> List[str]:
@@ -128,3 +130,20 @@ def _extract_imdb_datasets(url: str, ds: str, prev_ds: str) -> None:
         logging.info(f"Fetched {df.shape[0]} new rows for {tbl}. Writing to {file_name}.")
 
         df.to_csv(f"{DATA_DIR}/{file_name}", index=False)
+
+
+def _branch_test_raw_nyt_reviews(**context: Any) -> str:
+    """Branch for testing NYT reviews.
+
+    Skip the data tests if there are no reviews available.
+
+    Args:
+        context: Airflow context.
+
+    Returns:
+        ID of task to run.
+    """
+    has_results = context["task_instance"].xcom_pull(
+        task_ids="extract_nyt_reviews", key="return_value"
+    )
+    return "run_test_raw_nyt_reviews" if has_results else "skip_test_raw_nyt_reviews"

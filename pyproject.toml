@@ -9,7 +9,7 @@ python = "^3.9"
 requests = "^2.28.1"
 great-expectations = "^0.15.22"
 beautifulsoup4 = "^4.11.1"
-apache-airflow = "^2.3.4"
+apache-airflow = {extras = ["amazon"], version = "^2.3.4"}
 pandas = "^1.4.4"
 airflow-provider-great-expectations = "^0.1.5"
 

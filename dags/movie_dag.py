@@ -88,6 +88,24 @@ with DAG(dag_id="movie_dag", schedule_interval="@daily", start_date=days_ago(1))
         checkpoint_kwargs={"validations": [{"batch_request": imdb_rating_runtime}]},
     )
 
+    load_imdb_basics_to_s3 = LocalFilesystemToS3Operator(
+        task_id="load_imdb_basics_to_s3",
+        filename="data/imdb/tables/title.basics.csv.gz",
+        dest_key="imdb/title.basics-{{ ds }}.csv.gz",
+        dest_bucket=Variable.get("s3_bucket"),
+        aws_conn_id="s3_conn",
+        replace=True,
+    )
+
+    load_imdb_ratings_to_s3 = LocalFilesystemToS3Operator(
+        task_id="load_imdb_ratings_to_s3",
+        filename="data/imdb/tables/title.ratings.csv.gz",
+        dest_key="imdb/title.ratings-{{ ds }}.csv.gz",
+        dest_bucket=Variable.get("s3_bucket"),
+        aws_conn_id="s3_conn",
+        replace=True,
+    )
+
     combine_raw_imdb_datasets = EmptyOperator(
         task_id="combine_raw_imdb_datasets", trigger_rule="none_failed"
     )
@@ -104,9 +122,11 @@ with DAG(dag_id="movie_dag", schedule_interval="@daily", start_date=days_ago(1))
         skip_tests_raw_imdb_basics,
         skip_tests_raw_imdb_ratings,
     ]
+    run_tests_raw_imdb_basics >> load_imdb_basics_to_s3
+    run_tests_raw_imdb_ratings >> load_imdb_ratings_to_s3
     [
-        run_tests_raw_imdb_basics,
-        run_tests_raw_imdb_ratings,
+        load_imdb_basics_to_s3,
+        load_imdb_ratings_to_s3,
         skip_tests_raw_imdb_basics,
         skip_tests_raw_imdb_ratings,
     ] >> combine_raw_imdb_datasets

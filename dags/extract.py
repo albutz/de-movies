@@ -96,7 +96,7 @@ def _get_download_links(url: str) -> List[str]:
     return links
 
 
-def _extract_imdb_datasets(url: str, ds: str, prev_ds: str) -> None:
+def _extract_imdb_datasets(url: str, prev_ds: str) -> None:
     """Extract datasets from IMDB.
 
     Fetch the title.basics and title.ratings datasets from IMDB and dump new
@@ -104,7 +104,6 @@ def _extract_imdb_datasets(url: str, ds: str, prev_ds: str) -> None:
 
     Args:
         url: URL to get download links via _get_download_links.
-        ds: DAG run's logical date.
         prev_ds: DAG run's previous logical date if exists, else None.
     """
     tbls = ["title.basics", "title.ratings"]
@@ -126,7 +125,7 @@ def _extract_imdb_datasets(url: str, ds: str, prev_ds: str) -> None:
         # '\\N' encodes missing values
         df = df.where(df != "\\N", other=np.nan)
 
-        file_name = f"imdb/tables/{tbl}-{ds}.csv.gz"
+        file_name = f"imdb/tables/{tbl}.csv.gz"
         logging.info(f"Fetched {df.shape[0]} new rows for {tbl}. Writing to {file_name}.")
 
         df.to_csv(f"{DATA_DIR}/{file_name}", index=False)

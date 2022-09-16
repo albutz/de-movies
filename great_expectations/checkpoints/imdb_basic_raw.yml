@@ -19,14 +19,6 @@ action_list:
       site_names: []
 evaluation_parameters: {}
 runtime_configuration: {}
-validations:
-  - batch_request:
-      datasource_name: imdb_raw
-      data_connector_name: default_inferred_data_connector_name
-      data_asset_name: title.basics-2022-09-12.csv.gz
-      data_connector_query:
-        index: -1
-    expectation_suite_name: imdb-basic.raw
 profilers: []
 ge_cloud_id:
 expectation_suite_ge_cloud_id:

@@ -137,7 +137,7 @@ def _extract_imdb_datasets(url: str, prev_ds: str) -> List[str]:
         if n_rows > 0:
             logging.info(f"Fetched {n_rows} new rows for {tbl}. Writing to {file_name}.")
 
-            dumped_tbls += tbl
+            dumped_tbls.append(tbl)
 
             df.to_csv(f"{DATA_DIR}/{file_name}", index=False)
         else:
@@ -146,18 +146,18 @@ def _extract_imdb_datasets(url: str, prev_ds: str) -> List[str]:
     return dumped_tbls
 
 
-def _branch_raw_nyt_reviews(**context: Any) -> str:
-    """Branch for testing NYT reviews.
+def _branch_tests(task_ids: str, **context: Any) -> str:
+    """Branch for testing.
 
-    Skip the data tests if there are no reviews available.
+    Skip the data tests if there are no new records available.
 
     Args:
+        task_ids: Task ID from which to pull return value.
         context: Airflow context.
 
     Returns:
         ID of task to run.
     """
-    has_results = context["task_instance"].xcom_pull(
-        task_ids="extract_nyt_reviews", key="return_value"
-    )
-    return "run_test_raw_nyt_reviews" if has_results else "skip_test_raw_nyt_reviews"
+    has_results = context["task_instance"].xcom_pull(task_ids=task_ids, key="return_value")
+    type = "nyt_reviews" if task_ids == "extract_nyt_reviews" else "imdb_datasets"
+    return f"run_tests_raw_{type}" if has_results else f"skip_tests_raw_{type}"

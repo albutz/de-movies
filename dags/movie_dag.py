@@ -5,7 +5,7 @@ from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator, PythonOperator
 from airflow.providers.amazon.aws.transfers.local_to_s3 import LocalFilesystemToS3Operator
 from airflow.utils.dates import days_ago
-from extract import _branch_raw_nyt_reviews, _extract_imdb_datasets, _extract_nyt_reviews
+from extract import _branch_tests, _extract_imdb_datasets, _extract_nyt_reviews
 from ge_extract import nyt_raw_runtime
 from great_expectations_provider.operators.great_expectations import GreatExpectationsOperator
 
@@ -25,20 +25,21 @@ with DAG(dag_id="movie_dag", schedule_interval="@daily", start_date=days_ago(1))
 
     branch_raw_nyt_reviews = BranchPythonOperator(
         task_id="branch_raw_nyt_reviews",
-        python_callable=_branch_raw_nyt_reviews,
+        python_callable=_branch_tests,
+        op_kwargs={"task_ids": "extract_nyt_reviews"},
     )
 
-    skip_test_raw_nyt_reviews = EmptyOperator(task_id="skip_test_raw_nyt_reviews")
+    skip_tests_raw_nyt_reviews = EmptyOperator(task_id="skip_tests_raw_nyt_reviews")
 
-    run_test_raw_nyt_reviews = GreatExpectationsOperator(
-        task_id="run_test_raw_nyt_reviews",
+    run_tests_raw_nyt_reviews = GreatExpectationsOperator(
+        task_id="run_tests_raw_nyt_reviews",
         data_context_root_dir="great_expectations",
         checkpoint_name="nyt_review_raw",
         checkpoint_kwargs={"validations": [{"batch_request": nyt_raw_runtime}]},
     )
 
-    combine_test_raw_nyt_reviews = EmptyOperator(
-        task_id="combine_test_raw_nyt_reviews", trigger_rule="none_failed"
+    combine_raw_nyt_reviews = EmptyOperator(
+        task_id="combine_raw_nyt_reviews", trigger_rule="none_failed"
     )
 
     load_nyt_reviews_to_s3 = LocalFilesystemToS3Operator(
@@ -59,6 +60,6 @@ with DAG(dag_id="movie_dag", schedule_interval="@daily", start_date=days_ago(1))
     )
 
     extract_nyt_reviews >> branch_raw_nyt_reviews
-    branch_raw_nyt_reviews >> [run_test_raw_nyt_reviews, skip_test_raw_nyt_reviews]
-    run_test_raw_nyt_reviews >> load_nyt_reviews_to_s3
-    [load_nyt_reviews_to_s3, skip_test_raw_nyt_reviews] >> combine_test_raw_nyt_reviews
+    branch_raw_nyt_reviews >> [run_tests_raw_nyt_reviews, skip_tests_raw_nyt_reviews]
+    run_tests_raw_nyt_reviews >> load_nyt_reviews_to_s3
+    [load_nyt_reviews_to_s3, skip_tests_raw_nyt_reviews] >> combine_raw_nyt_reviews

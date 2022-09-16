@@ -96,7 +96,7 @@ def _get_download_links(url: str) -> List[str]:
     return links
 
 
-def _extract_imdb_datasets(url: str, prev_ds: str) -> None:
+def _extract_imdb_datasets(url: str, prev_ds: str) -> List[str]:
     """Extract datasets from IMDB.
 
     Fetch the title.basics and title.ratings datasets from IMDB and dump new
@@ -105,11 +105,16 @@ def _extract_imdb_datasets(url: str, prev_ds: str) -> None:
     Args:
         url: URL to get download links via _get_download_links.
         prev_ds: DAG run's previous logical date if exists, else None.
+
+    Returns:
+        List of dumped table names.
     """
     tbls = ["title.basics", "title.ratings"]
     urls = _get_download_links(url)
     urls = [url for url in urls if any(keep_url in url for keep_url in tbls)]
     tbl_urls = {tbl: url for tbl, url in zip(tbls, urls)}
+
+    dumped_tbls: List[str] = []
 
     for tbl, url in tbl_urls.items():
         df = pd.read_table(url, header=0, compression="gzip")
@@ -125,10 +130,20 @@ def _extract_imdb_datasets(url: str, prev_ds: str) -> None:
         # '\\N' encodes missing values
         df = df.where(df != "\\N", other=np.nan)
 
-        file_name = f"imdb/tables/{tbl}.csv.gz"
-        logging.info(f"Fetched {df.shape[0]} new rows for {tbl}. Writing to {file_name}.")
+        n_rows = df.shape[0]
 
-        df.to_csv(f"{DATA_DIR}/{file_name}", index=False)
+        file_name = f"imdb/tables/{tbl}.csv.gz"
+
+        if n_rows > 0:
+            logging.info(f"Fetched {n_rows} new rows for {tbl}. Writing to {file_name}.")
+
+            dumped_tbls += tbl
+
+            df.to_csv(f"{DATA_DIR}/{file_name}", index=False)
+        else:
+            logging.info(f"No new rows for {tbl}.")
+
+    return dumped_tbls
 
 
 def _branch_test_raw_nyt_reviews(**context: Any) -> str:

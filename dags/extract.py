@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup, SoupStrainer
 from requests.exceptions import HTTPError
 
 DATA_DIR = "/opt/airflow/data"
+IMDB_TABLES = ["title.basics", "title.ratings"]
 
 
 def _extract_nyt_reviews(url: str, key: str, left_boundary: str, right_boundary: str) -> bool:
@@ -109,10 +110,9 @@ def _extract_imdb_datasets(url: str) -> List[str]:
     Returns:
         List of dumped table names.
     """
-    tbls = ["title.basics", "title.ratings"]
     urls = _get_download_links(url)
-    urls = [url for url in urls if any(keep_url in url for keep_url in tbls)]
-    tbl_urls = {tbl: url for tbl, url in zip(tbls, urls)}
+    urls = [url for url in urls if any(keep_url in url for keep_url in IMDB_TABLES)]
+    tbl_urls = {tbl: url for tbl, url in zip(IMDB_TABLES, urls)}
 
     dumped_tbls: List[str] = []
 
@@ -146,10 +146,10 @@ def _extract_imdb_datasets(url: str) -> List[str]:
     return dumped_tbls
 
 
-def _branch_tests(task_ids: str, **context: Any) -> str:
+def _branch_nyt_tests(task_ids: str, **context: Any) -> str:
     """Branch for testing.
 
-    Skip the data tests if there are no new records available.
+    Skip the data tests if there are no new reviews available.
 
     Args:
         task_ids: Task ID from which to pull return value.
@@ -159,5 +159,30 @@ def _branch_tests(task_ids: str, **context: Any) -> str:
         ID of task to run.
     """
     has_results = context["task_instance"].xcom_pull(task_ids=task_ids, key="return_value")
-    type = "nyt_reviews" if task_ids == "extract_nyt_reviews" else "imdb_datasets"
-    return f"run_tests_raw_{type}" if has_results else f"skip_tests_raw_{type}"
+    return "run_tests_raw_nyt_reviews" if has_results else "skip_tests_raw_nyt_reviews"
+
+
+def _branch_imdb_tests(**context: Any) -> List[str]:
+    """Branch for testing IMDB datasets.
+
+    Skip the data tests if there are no new records available.
+
+    Args:
+        context: Airflow context.
+
+    Returns:
+        IDs of tasks to run.
+    """
+    dumped_tbls = context["task_instance"].xcom_pull(
+        task_ids="extract_imdb_datasets", key="return_value"
+    )
+
+    next_tasks = []
+    for tbl in IMDB_TABLES:
+        tbl_suffix = tbl.replace("title.", "")
+        if tbl in dumped_tbls:
+            next_tasks.append(f"run_tests_raw_imdb_{tbl_suffix}")
+        else:
+            next_tasks.append(f"skip_tests_raw_imdb_{tbl_suffix}")
+
+    return next_tasks

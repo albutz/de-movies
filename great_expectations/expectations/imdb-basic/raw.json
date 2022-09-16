@@ -1,0 +1,91 @@
+{
+  "data_asset_type": null,
+  "expectation_suite_name": "imdb-basic.raw",
+  "expectations": [
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "tconst"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_table_columns_to_match_set",
+      "kwargs": {
+        "column_set": [
+          "tconst",
+          "titleType",
+          "primaryTitle",
+          "originalTitle",
+          "isAdult",
+          "startYear",
+          "endYear",
+          "runtimeMinutes",
+          "genres"
+        ]
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "originalTitle",
+        "mostly": 0.99
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "primaryTitle",
+        "mostly": 0.99
+      },
+      "meta": {}
+    }
+  ],
+  "ge_cloud_id": null,
+  "meta": {
+    "citations": [
+      {
+        "batch_request": {
+          "data_asset_name": "title.basics-2022-09-12.csv.gz",
+          "data_connector_name": "default_inferred_data_connector_name",
+          "datasource_name": "imdb_raw",
+          "limit": 1000
+        },
+        "citation_date": "2022-09-16T07:00:19.462458Z",
+        "comment": "Created suite added via CLI"
+      }
+    ],
+    "columns": {
+      "endYear": {
+        "description": ""
+      },
+      "genres": {
+        "description": ""
+      },
+      "isAdult": {
+        "description": ""
+      },
+      "originalTitle": {
+        "description": ""
+      },
+      "primaryTitle": {
+        "description": ""
+      },
+      "runtimeMinutes": {
+        "description": ""
+      },
+      "startYear": {
+        "description": ""
+      },
+      "tconst": {
+        "description": ""
+      },
+      "titleType": {
+        "description": ""
+      }
+    },
+    "great_expectations_version": "0.15.22"
+  }
+}

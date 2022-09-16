@@ -146,7 +146,7 @@ def _extract_imdb_datasets(url: str, prev_ds: str) -> List[str]:
     return dumped_tbls
 
 
-def _branch_test_raw_nyt_reviews(**context: Any) -> str:
+def _branch_raw_nyt_reviews(**context: Any) -> str:
     """Branch for testing NYT reviews.
 
     Skip the data tests if there are no reviews available.

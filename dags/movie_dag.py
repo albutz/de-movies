@@ -5,7 +5,7 @@ from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator, PythonOperator
 from airflow.providers.amazon.aws.transfers.local_to_s3 import LocalFilesystemToS3Operator
 from airflow.utils.dates import days_ago
-from extract import _branch_test_raw_nyt_reviews, _extract_imdb_datasets, _extract_nyt_reviews
+from extract import _branch_raw_nyt_reviews, _extract_imdb_datasets, _extract_nyt_reviews
 from ge_extract import nyt_raw_runtime
 from great_expectations_provider.operators.great_expectations import GreatExpectationsOperator
 
@@ -23,9 +23,9 @@ with DAG(dag_id="movie_dag", schedule_interval="@daily", start_date=days_ago(1))
         },
     )
 
-    branch_test_raw_nyt_reviews = BranchPythonOperator(
-        task_id="branch_test_raw_nyt_reviews",
-        python_callable=_branch_test_raw_nyt_reviews,
+    branch_raw_nyt_reviews = BranchPythonOperator(
+        task_id="branch_raw_nyt_reviews",
+        python_callable=_branch_raw_nyt_reviews,
     )
 
     skip_test_raw_nyt_reviews = EmptyOperator(task_id="skip_test_raw_nyt_reviews")
@@ -58,7 +58,7 @@ with DAG(dag_id="movie_dag", schedule_interval="@daily", start_date=days_ago(1))
         },
     )
 
-    extract_nyt_reviews >> branch_test_raw_nyt_reviews
-    branch_test_raw_nyt_reviews >> [run_test_raw_nyt_reviews, skip_test_raw_nyt_reviews]
+    extract_nyt_reviews >> branch_raw_nyt_reviews
+    branch_raw_nyt_reviews >> [run_test_raw_nyt_reviews, skip_test_raw_nyt_reviews]
     run_test_raw_nyt_reviews >> load_nyt_reviews_to_s3
     [load_nyt_reviews_to_s3, skip_test_raw_nyt_reviews] >> combine_test_raw_nyt_reviews

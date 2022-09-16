@@ -6,7 +6,7 @@ from airflow.operators.python import BranchPythonOperator, PythonOperator
 from airflow.providers.amazon.aws.transfers.local_to_s3 import LocalFilesystemToS3Operator
 from airflow.utils.dates import days_ago
 from extract import _branch_tests, _extract_imdb_datasets, _extract_nyt_reviews
-from ge_extract import nyt_raw_runtime
+from ge_extract import imdb_basic_runtime, imdb_rating_runtime, nyt_raw_runtime
 from great_expectations_provider.operators.great_expectations import GreatExpectationsOperator
 
 with DAG(dag_id="movie_dag", schedule_interval="@daily", start_date=days_ago(1)) as dag:
@@ -18,7 +18,7 @@ with DAG(dag_id="movie_dag", schedule_interval="@daily", start_date=days_ago(1))
         op_kwargs={
             "url": Variable.get("nyt_url"),
             "key": Variable.get("nyt_key"),
-            "left_boundary": "{{ ds }}",
+            "left_boundary": "2022-09-10",
             "right_boundary": "{{ ds }}",
         },
     )
@@ -48,6 +48,7 @@ with DAG(dag_id="movie_dag", schedule_interval="@daily", start_date=days_ago(1))
         dest_key="nyt/nyt-review-{{ ds }}.json",
         dest_bucket=Variable.get("s3_bucket"),
         aws_conn_id="s3_conn",
+        replace=True,
     )
 
     # IMDB datasets
@@ -59,7 +60,23 @@ with DAG(dag_id="movie_dag", schedule_interval="@daily", start_date=days_ago(1))
         },
     )
 
+    run_tests_raw_imdb_basic = GreatExpectationsOperator(
+        task_id="run_tests_raw_imdb_basic",
+        data_context_root_dir="great_expectations",
+        checkpoint_name="imdb_basic_raw",
+        checkpoint_kwargs={"validations": [{"batch_request": imdb_basic_runtime}]},
+    )
+
+    run_tests_raw_imdb_rating = GreatExpectationsOperator(
+        task_id="run_tests_raw_imdb_rating",
+        data_context_root_dir="great_expectations",
+        checkpoint_name="imdb_rating_raw",
+        checkpoint_kwargs={"validations": [{"batch_request": imdb_rating_runtime}]},
+    )
+
     extract_nyt_reviews >> branch_raw_nyt_reviews
     branch_raw_nyt_reviews >> [run_tests_raw_nyt_reviews, skip_tests_raw_nyt_reviews]
     run_tests_raw_nyt_reviews >> load_nyt_reviews_to_s3
     [load_nyt_reviews_to_s3, skip_tests_raw_nyt_reviews] >> combine_raw_nyt_reviews
+
+    extract_imdb_datasets >> [run_tests_raw_imdb_basic, run_tests_raw_imdb_rating]

@@ -18,7 +18,7 @@ with DAG(dag_id="movie_dag", schedule_interval="@daily", start_date=days_ago(1))
         op_kwargs={
             "url": Variable.get("nyt_url"),
             "key": Variable.get("nyt_key"),
-            "left_boundary": "2022-09-10",
+            "left_boundary": "{{ ds }}",
             "right_boundary": "{{ ds }}",
         },
     )

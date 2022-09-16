@@ -2,6 +2,7 @@
 import json
 import logging
 import time
+from pathlib import Path
 from typing import Any, List
 
 import numpy as np
@@ -96,7 +97,7 @@ def _get_download_links(url: str) -> List[str]:
     return links
 
 
-def _extract_imdb_datasets(url: str, prev_ds: str) -> List[str]:
+def _extract_imdb_datasets(url: str) -> List[str]:
     """Extract datasets from IMDB.
 
     Fetch the title.basics and title.ratings datasets from IMDB and dump new
@@ -104,7 +105,6 @@ def _extract_imdb_datasets(url: str, prev_ds: str) -> List[str]:
 
     Args:
         url: URL to get download links via _get_download_links.
-        prev_ds: DAG run's previous logical date if exists, else None.
 
     Returns:
         List of dumped table names.
@@ -120,7 +120,7 @@ def _extract_imdb_datasets(url: str, prev_ds: str) -> List[str]:
         df = pd.read_table(url, header=0, compression="gzip")
         ids_file = f"{DATA_DIR}/imdb/ids/ids.{tbl}.csv"
 
-        if prev_ds:
+        if Path(ids_file).exists():
             existing_ids = pd.read_csv(ids_file, header=None).squeeze("columns")
             df = df.loc[~df.tconst.isin(existing_ids)]
 

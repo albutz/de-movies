@@ -14,7 +14,9 @@ from extract import (
 from ge_extract import imdb_basic_runtime, imdb_rating_runtime, nyt_raw_runtime
 from great_expectations_provider.operators.great_expectations import GreatExpectationsOperator
 
-with DAG(dag_id="movie_dag", schedule_interval="@daily", start_date=days_ago(1)) as dag:
+with DAG(
+    dag_id="movie_dag", schedule_interval="@daily", start_date=days_ago(1), max_active_runs=1
+) as dag:
 
     # NYT reviews
     extract_nyt_reviews = PythonOperator(

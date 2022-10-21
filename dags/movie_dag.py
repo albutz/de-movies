@@ -127,6 +127,40 @@ with DAG(
         replace=True,
     )
 
+    truncate_raw_imdb_basics_table = SnowflakeOperator(
+        task_id="truncate_raw_imdb_basics_table",
+        sql="TRUNCATE TABLE MOVIES.RAW.raw_imdb_basics;",
+        snowflake_conn_id="snowflake_conn",
+    )
+
+    copy_raw_imdb_basics_table = S3ToSnowflakeOperator(
+        task_id="copy_raw_imdb_basics_table",
+        snowflake_conn_id="snowflake_conn",
+        s3_keys=["title.basics-{{ ds }}.csv.gz"],
+        table="raw_imdb_basics",
+        schema="RAW",
+        database="MOVIES",
+        stage="MOVIES.STAGES.s3_imdb",
+        file_format="MOVIES.FILE_FORMATS.csv_file",
+    )
+
+    truncate_raw_imdb_ratings_table = SnowflakeOperator(
+        task_id="truncate_raw_imdb_ratings_table",
+        sql="TRUNCATE TABLE MOVIES.RAW.raw_imdb_ratings;",
+        snowflake_conn_id="snowflake_conn",
+    )
+
+    copy_raw_imdb_ratings_table = S3ToSnowflakeOperator(
+        task_id="copy_raw_imdb_ratings_table",
+        snowflake_conn_id="snowflake_conn",
+        s3_keys=["title.ratings-{{ ds }}.csv.gz"],
+        table="raw_imdb_ratings",
+        schema="RAW",
+        database="MOVIES",
+        stage="MOVIES.STAGES.s3_imdb",
+        file_format="MOVIES.FILE_FORMATS.csv_file",
+    )
+
     combine_raw_imdb_datasets = EmptyOperator(
         task_id="combine_raw_imdb_datasets", trigger_rule="none_failed"
     )
@@ -146,9 +180,13 @@ with DAG(
     ]
     run_tests_raw_imdb_basics >> load_imdb_basics_to_s3
     run_tests_raw_imdb_ratings >> load_imdb_ratings_to_s3
+    load_imdb_basics_to_s3 >> truncate_raw_imdb_basics_table
+    truncate_raw_imdb_basics_table >> copy_raw_imdb_basics_table
+    load_imdb_ratings_to_s3 >> truncate_raw_imdb_ratings_table
+    truncate_raw_imdb_ratings_table >> copy_raw_imdb_ratings_table
     [
-        load_imdb_basics_to_s3,
-        load_imdb_ratings_to_s3,
+        copy_raw_imdb_basics_table,
+        copy_raw_imdb_ratings_table,
         skip_tests_raw_imdb_basics,
         skip_tests_raw_imdb_ratings,
     ] >> combine_raw_imdb_datasets

@@ -98,16 +98,19 @@ def main() -> None:
         CREATE OR REPLACE FILE FORMAT MOVIES.FILE_FORMATS.csv_file
             TYPE = CSV
             COMPRESSION = GZIP
-            SKIP_HEADER = 1;
+            SKIP_HEADER = 1
+            NULL_IF = ('')
+            FIELD_OPTIONALLY_ENCLOSED_BY = '"';
 
         -- Stage objects
         CREATE OR REPLACE SCHEMA MOVIES.STAGES;
         CREATE OR REPLACE STAGE MOVIES.STAGES.s3_imdb
             URL = '{config['airflow']['s3_bucket']}/imdb/'
             STORAGE_INTEGRATION = s3_int
-            FILE_FORMAT = MOVIES.FILE_FORMATS.csv_file;
+            FILE_FORMAT = MOVIES.FILE_FORMATS.csv_file
+            COPY_OPTIONS = (ON_ERROR = 'SKIP_FILE_0.5%');
 
-        CREATE OR REPLACE STAGE MANAGE_DB.STAGES.s3_nyt
+        CREATE OR REPLACE STAGE MOVIES.STAGES.s3_nyt
             URL = '{config['airflow']['s3_bucket']}/nyt/'
             STORAGE_INTEGRATION = s3_int
             FILE_FORMAT = (TYPE = JSON);

@@ -4,6 +4,8 @@ from airflow.models import Variable
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator, PythonOperator
 from airflow.providers.amazon.aws.transfers.local_to_s3 import LocalFilesystemToS3Operator
+from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
+from airflow.providers.snowflake.transfers.s3_to_snowflake import S3ToSnowflakeOperator
 from airflow.utils.dates import days_ago
 from extract import (
     _branch_imdb_tests,
@@ -56,6 +58,23 @@ with DAG(
         dest_bucket=Variable.get("s3_bucket"),
         aws_conn_id="s3_conn",
         replace=True,
+    )
+
+    truncate_raw_nyt_table = SnowflakeOperator(
+        task_id="truncate_raw_nyt_table",
+        sql="TRUNCATE TABLE MOVIES.RAW.raw_nyt_reviews;",
+        snowflake_conn_id="snowflake_conn",
+    )
+
+    copy_raw_nyt_table = S3ToSnowflakeOperator(
+        task_id="copy_raw_nyt_table",
+        snowflake_conn_id="snowflake_conn",
+        s3_keys=["nyt-review-{{ ds }}.json"],
+        table="raw_nyt_reviews",
+        schema="RAW",
+        database="MOVIES",
+        stage="MOVIES.STAGES.s3_nyt",
+        file_format="(TYPE = JSON)",
     )
 
     # IMDB datasets
@@ -115,7 +134,8 @@ with DAG(
     extract_nyt_reviews >> branch_raw_nyt_reviews
     branch_raw_nyt_reviews >> [run_tests_raw_nyt_reviews, skip_tests_raw_nyt_reviews]
     run_tests_raw_nyt_reviews >> load_nyt_reviews_to_s3
-    [load_nyt_reviews_to_s3, skip_tests_raw_nyt_reviews] >> combine_raw_nyt_reviews
+    load_nyt_reviews_to_s3 >> truncate_raw_nyt_table >> copy_raw_nyt_table
+    [copy_raw_nyt_table, skip_tests_raw_nyt_reviews] >> combine_raw_nyt_reviews
 
     extract_imdb_datasets >> branch_raw_imdb_datasets
     branch_raw_imdb_datasets >> [

@@ -1,0 +1,55 @@
+{
+  "data_asset_type": null,
+  "expectation_suite_name": "imdb-rating.raw",
+  "expectations": [
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "tconst"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "averageRating"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "numVotes",
+        "mostly": 0.9
+      },
+      "meta": {}
+    }
+  ],
+  "ge_cloud_id": null,
+  "meta": {
+    "citations": [
+      {
+        "batch_request": {
+          "data_asset_name": "title.ratings-2022-09-12.csv.gz",
+          "data_connector_name": "default_inferred_data_connector_name",
+          "datasource_name": "imdb_raw",
+          "limit": 1000
+        },
+        "citation_date": "2022-09-16T07:36:12.673130Z",
+        "comment": "Created suite added via CLI"
+      }
+    ],
+    "columns": {
+      "averageRating": {
+        "description": ""
+      },
+      "numVotes": {
+        "description": ""
+      },
+      "tconst": {
+        "description": ""
+      }
+    },
+    "great_expectations_version": "0.15.22"
+  }
+}

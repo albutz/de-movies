@@ -12,6 +12,7 @@ beautifulsoup4 = "^4.11.1"
 apache-airflow = {extras = ["amazon"], version = "^2.3.4"}
 pandas = "^1.4.4"
 airflow-provider-great-expectations = "^0.1.5"
+apache-airflow-providers-snowflake = "^3.3.0"
 
 [tool.poetry.dev-dependencies]
 bpython = "^0.23"

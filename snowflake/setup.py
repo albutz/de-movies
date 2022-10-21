@@ -44,7 +44,7 @@ def main() -> None:
         GRANT ALL ON WAREHOUSE COMPUTE_WH TO ROLE airflow;
         GRANT ALL ON DATABASE MOVIES TO ROLE airflow;
         GRANT ALL ON ALL SCHEMAS IN DATABASE MOVIES TO ROLE airflow;
-        GRANT ALL ON FUTURE SCHEMAS IN DATABASE AIRBNB TO ROLE airflow;
+        GRANT ALL ON FUTURE SCHEMAS IN DATABASE MOVIES TO ROLE airflow;
         GRANT ALL ON ALL TABLES IN SCHEMA MOVIES.RAW TO ROLE airflow;
         GRANT ALL ON FUTURE TABLES IN SCHEMA MOVIES.RAW TO ROLE airflow;
 
@@ -54,17 +54,7 @@ def main() -> None:
 
         -- Raw tables
         CREATE OR REPLACE TABLE raw_nyt_reviews (
-            display_title VARCHAR,
-            mpaa_rating VARCHAR,
-            critics_pick BOOLEAN,
-            byline VARCHAR,
-            headline VARCHAR,
-            summary_short VARCHAR,
-            publication_date DATE,
-            opening_date DATE,
-            date_updated DATETIME,
-            link VARIANT,
-            multimedia VARIANT
+            content VARIANT
         );
 
         CREATE OR REPLACE TABLE raw_imdb_basics (
@@ -96,24 +86,29 @@ def main() -> None:
         -- Get STORAGE_AWS_IAM_USER_ARN and STORAGE_AWS_EXTERNAL_ID
         DESC INTEGRATION s3_int;
 
-        -- File formats
-        CREATE DATABASE IF NOT EXISTS MANAGE_DB;
-        CREATE SCHEMA IF NOT EXISTS MANAGE_DB.FILE_FORMATS;
+        -- Grant usage
+        GRANT USAGE ON INTEGRATION s3_int TO ROLE airflow;
 
-        CREATE OR REPLACE FILE FORMAT MANAGE_DB.FILE_FORMATS.csv_file
+        -- Ensure ownership of objects
+        DROP SCHEMA IF EXISTS MOVIES.FILE_FORMATS;
+        DROP SCHEMA IF EXISTS MOVIES.STAGES;
+        USE ROLE airflow;
+
+        -- File formats
+        CREATE OR REPLACE FILE FORMAT MOVIES.FILE_FORMATS.csv_file
             TYPE = CSV
             COMPRESSION = GZIP
             SKIP_HEADER = 1;
 
         -- Stage objects
-        CREATE SCHEMA IF NOT EXISTS MANAGE_DB.STAGES;
-        CREATE OR REPLACE STAGE MANAGE_DB.STAGES.s3_imdb
-            URL = {config['airflow']['s3_bucket']}/imdb
+        CREATE OR REPLACE SCHEMA MOVIES.STAGES;
+        CREATE OR REPLACE STAGE MOVIES.STAGES.s3_imdb
+            URL = '{config['airflow']['s3_bucket']}/imdb/'
             STORAGE_INTEGRATION = s3_int
-            FILE_FORMAT = MANAGE_DB.FILE_FORMATS.csv_file;
+            FILE_FORMAT = MOVIES.FILE_FORMATS.csv_file;
 
         CREATE OR REPLACE STAGE MANAGE_DB.STAGES.s3_nyt
-            URL = {config['airflow']['s3_bucket']}/nyt
+            URL = '{config['airflow']['s3_bucket']}/nyt/'
             STORAGE_INTEGRATION = s3_int
             FILE_FORMAT = (TYPE = JSON);
     """

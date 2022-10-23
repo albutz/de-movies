@@ -73,6 +73,7 @@ with DAG(
         table="raw_nyt_reviews",
         schema="RAW",
         database="MOVIES",
+        warehouse="COMPUTE_WH",
         stage="MOVIES.STAGES.s3_nyt",
         file_format="(TYPE = JSON)",
     )
@@ -140,6 +141,7 @@ with DAG(
         table="raw_imdb_basics",
         schema="RAW",
         database="MOVIES",
+        warehouse="COMPUTE_WH",
         stage="MOVIES.STAGES.s3_imdb",
         file_format="MOVIES.FILE_FORMATS.csv_file",
     )
@@ -157,6 +159,7 @@ with DAG(
         table="raw_imdb_ratings",
         schema="RAW",
         database="MOVIES",
+        warehouse="COMPUTE_WH",
         stage="MOVIES.STAGES.s3_imdb",
         file_format="MOVIES.FILE_FORMATS.csv_file",
     )

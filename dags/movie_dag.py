@@ -13,11 +13,16 @@ from extract import (
     _extract_imdb_datasets,
     _extract_nyt_reviews,
 )
-from ge_extract import imdb_basic_runtime, imdb_rating_runtime, nyt_raw_runtime
+
+# from ge_extract import imdb_basic_runtime, imdb_rating_runtime, nyt_raw_runtime
+from ge_extract import _runtime_batch_request
 from great_expectations_provider.operators.great_expectations import GreatExpectationsOperator
 
 with DAG(
-    dag_id="movie_dag", schedule_interval="@daily", start_date=days_ago(1), max_active_runs=1
+    dag_id="movie_dag",
+    schedule_interval="@daily",
+    start_date=days_ago(1),
+    max_active_runs=1,
 ) as dag:
 
     # NYT reviews
@@ -44,7 +49,17 @@ with DAG(
         task_id="run_tests_raw_nyt_reviews",
         data_context_root_dir="great_expectations",
         checkpoint_name="nyt_review_raw",
-        checkpoint_kwargs={"validations": [{"batch_request": nyt_raw_runtime}]},
+        checkpoint_kwargs={
+            "validations": [
+                {
+                    "batch_request": _runtime_batch_request(
+                        data_source_name="nyt_reviews_raw",
+                        data_asset_name="nyt_review",
+                        path="data/nyt/nyt-review.json",
+                    )
+                }
+            ]
+        },
     )
 
     combine_raw_nyt_reviews = EmptyOperator(
@@ -100,14 +115,34 @@ with DAG(
         task_id="run_tests_raw_imdb_basics",
         data_context_root_dir="great_expectations",
         checkpoint_name="imdb_basic_raw",
-        checkpoint_kwargs={"validations": [{"batch_request": imdb_basic_runtime}]},
+        checkpoint_kwargs={
+            "validations": [
+                {
+                    "batch_request": _runtime_batch_request(
+                        data_source_name="imdb_raw",
+                        data_asset_name="imdb_basic",
+                        path="data/imdb/tables/title.basics.csv.gz",
+                    )
+                }
+            ]
+        },
     )
 
     run_tests_raw_imdb_ratings = GreatExpectationsOperator(
         task_id="run_tests_raw_imdb_ratings",
         data_context_root_dir="great_expectations",
         checkpoint_name="imdb_rating_raw",
-        checkpoint_kwargs={"validations": [{"batch_request": imdb_rating_runtime}]},
+        checkpoint_kwargs={
+            "validations": [
+                {
+                    "batch_request": _runtime_batch_request(
+                        data_source_name="imdb_raw",
+                        data_asset_name="imdb_rating",
+                        path="data/imdb/tables/title.ratings.csv.gz",
+                    )
+                }
+            ]
+        },
     )
 
     load_imdb_basics_to_s3 = LocalFilesystemToS3Operator(

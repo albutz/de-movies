@@ -204,3 +204,29 @@ def _branch_imdb_tests(**context: Any) -> List[str]:
             next_tasks.append(f"skip_tests_raw_imdb_{tbl_suffix}")
 
     return next_tasks
+
+
+def _branch_imdb_copy(**context: Any) -> List[str]:
+    """Branch for copying IMDB datasets.
+
+    Skip the copy if there are no new records available.
+
+    Args:
+        context: Airflow context.
+
+    Returns:
+        IDs of tasks to run.
+    """
+    dumped_tbls = context["task_instance"].xcom_pull(
+        task_ids="extract_imdb_datasets", key="return_value"
+    )
+
+    next_tasks = []
+    for tbl in IMDB_TABLES:
+        tbl_suffix = tbl.replace("title.", "")
+        if tbl in dumped_tbls:
+            next_tasks.append(f"copy_raw_imdb_{tbl_suffix}_table")
+        else:
+            next_tasks.append(f"skip_copy_raw_imdb_{tbl_suffix}_table")
+
+    return next_tasks

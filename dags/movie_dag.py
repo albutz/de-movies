@@ -8,6 +8,7 @@ from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
 from airflow.providers.snowflake.transfers.s3_to_snowflake import S3ToSnowflakeOperator
 from airflow.utils.dates import days_ago
 from extract import (
+    _branch_imdb_copy,
     _branch_imdb_tests,
     _branch_nyt_copy,
     _branch_nyt_tests,
@@ -110,8 +111,8 @@ with DAG(
         },
     )
 
-    branch_raw_imdb_datasets = BranchPythonOperator(
-        task_id="branch_raw_imdb_datasets",
+    branch_test_load_raw_imdb_datasets = BranchPythonOperator(
+        task_id="branch_test_load_raw_imdb_datasets",
         python_callable=_branch_imdb_tests,
     )
 
@@ -171,10 +172,24 @@ with DAG(
         replace=True,
     )
 
+    combine_test_load_imdb_datasets = EmptyOperator(
+        task_id="combine_test_load_imdb_datasets", trigger_rule="none_failed"
+    )
+
     truncate_raw_imdb_basics_table = SnowflakeOperator(
         task_id="truncate_raw_imdb_basics_table",
         sql="TRUNCATE TABLE MOVIES.RAW.raw_imdb_basics;",
         snowflake_conn_id="snowflake_conn",
+    )
+
+    truncate_raw_imdb_ratings_table = SnowflakeOperator(
+        task_id="truncate_raw_imdb_ratings_table",
+        sql="TRUNCATE TABLE MOVIES.RAW.raw_imdb_ratings;",
+        snowflake_conn_id="snowflake_conn",
+    )
+
+    branch_copy_imdb_datasets = BranchPythonOperator(
+        task_id="branch_copy_imdb_datasets", python_callable=_branch_imdb_copy
     )
 
     copy_raw_imdb_basics_table = S3ToSnowflakeOperator(
@@ -189,11 +204,7 @@ with DAG(
         file_format="MOVIES.FILE_FORMATS.csv_file",
     )
 
-    truncate_raw_imdb_ratings_table = SnowflakeOperator(
-        task_id="truncate_raw_imdb_ratings_table",
-        sql="TRUNCATE TABLE MOVIES.RAW.raw_imdb_ratings;",
-        snowflake_conn_id="snowflake_conn",
-    )
+    skip_copy_raw_imdb_basics_table = EmptyOperator(task_id="skip_copy_raw_imdb_basics_table")
 
     copy_raw_imdb_ratings_table = S3ToSnowflakeOperator(
         task_id="copy_raw_imdb_ratings_table",
@@ -207,8 +218,10 @@ with DAG(
         file_format="MOVIES.FILE_FORMATS.csv_file",
     )
 
-    combine_raw_imdb_datasets = EmptyOperator(
-        task_id="combine_raw_imdb_datasets", trigger_rule="none_failed"
+    skip_copy_raw_imdb_ratings_table = EmptyOperator(task_id="skip_copy_raw_imdb_ratings_table")
+
+    combine_copy_raw_imdb_tables = EmptyOperator(
+        task_id="combine_copy_raw_imdb_tables", trigger_rule="none_failed"
     )
 
     extract_nyt_reviews >> branch_test_load_raw_nyt_reviews
@@ -220,8 +233,8 @@ with DAG(
     branch_copy_nyt_table >> [copy_raw_nyt_table, skip_copy_raw_nyt_table]
     [copy_raw_nyt_table, skip_copy_raw_nyt_table] >> combine_copy_raw_nyt_table
 
-    extract_imdb_datasets >> branch_raw_imdb_datasets
-    branch_raw_imdb_datasets >> [
+    extract_imdb_datasets >> branch_test_load_raw_imdb_datasets
+    branch_test_load_raw_imdb_datasets >> [
         run_tests_raw_imdb_basics,
         run_tests_raw_imdb_ratings,
         skip_tests_raw_imdb_basics,
@@ -229,13 +242,26 @@ with DAG(
     ]
     run_tests_raw_imdb_basics >> load_imdb_basics_to_s3
     run_tests_raw_imdb_ratings >> load_imdb_ratings_to_s3
-    load_imdb_basics_to_s3 >> truncate_raw_imdb_basics_table
-    truncate_raw_imdb_basics_table >> copy_raw_imdb_basics_table
-    load_imdb_ratings_to_s3 >> truncate_raw_imdb_ratings_table
-    truncate_raw_imdb_ratings_table >> copy_raw_imdb_ratings_table
+    [
+        load_imdb_basics_to_s3,
+        load_imdb_ratings_to_s3,
+        skip_tests_raw_imdb_basics,
+        skip_tests_raw_imdb_ratings,
+    ] >> combine_test_load_imdb_datasets
+    combine_test_load_imdb_datasets >> [
+        truncate_raw_imdb_basics_table,
+        truncate_raw_imdb_ratings_table,
+    ]
+    [truncate_raw_imdb_basics_table, truncate_raw_imdb_ratings_table] >> branch_copy_imdb_datasets
+    branch_copy_imdb_datasets >> [
+        copy_raw_imdb_basics_table,
+        copy_raw_imdb_ratings_table,
+        skip_copy_raw_imdb_basics_table,
+        skip_copy_raw_imdb_ratings_table,
+    ]
     [
         copy_raw_imdb_basics_table,
         copy_raw_imdb_ratings_table,
-        skip_tests_raw_imdb_basics,
-        skip_tests_raw_imdb_ratings,
-    ] >> combine_raw_imdb_datasets
+        skip_copy_raw_imdb_basics_table,
+        skip_copy_raw_imdb_ratings_table,
+    ] >> combine_copy_raw_imdb_tables

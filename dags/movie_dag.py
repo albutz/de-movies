@@ -76,7 +76,10 @@ with DAG(
 
     truncate_raw_nyt_table = SnowflakeOperator(
         task_id="truncate_raw_nyt_table",
-        sql="TRUNCATE TABLE MOVIES.RAW.raw_nyt_reviews;",
+        sql="TRUNCATE TABLE raw_nyt_reviews;",
+        schema="RAW",
+        database="MOVIES",
+        warehouse="COMPUTE_WH",
         snowflake_conn_id="snowflake_conn",
     )
 
@@ -178,13 +181,19 @@ with DAG(
 
     truncate_raw_imdb_basics_table = SnowflakeOperator(
         task_id="truncate_raw_imdb_basics_table",
-        sql="TRUNCATE TABLE MOVIES.RAW.raw_imdb_basics;",
+        sql="TRUNCATE TABLE raw_imdb_basics;",
+        schema="RAW",
+        database="MOVIES",
+        warehouse="COMPUTE_WH",
         snowflake_conn_id="snowflake_conn",
     )
 
     truncate_raw_imdb_ratings_table = SnowflakeOperator(
         task_id="truncate_raw_imdb_ratings_table",
-        sql="TRUNCATE TABLE MOVIES.RAW.raw_imdb_ratings;",
+        sql="TRUNCATE TABLE raw_imdb_ratings;",
+        schema="RAW",
+        database="MOVIES",
+        warehouse="COMPUTE_WH",
         snowflake_conn_id="snowflake_conn",
     )
 

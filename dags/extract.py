@@ -146,20 +146,38 @@ def _extract_imdb_datasets(url: str) -> List[str]:
     return dumped_tbls
 
 
-def _branch_nyt_tests(task_ids: str, **context: Any) -> str:
+def _branch_nyt_tests(**context: Any) -> str:
     """Branch for testing.
 
     Skip the data tests if there are no new reviews available.
 
     Args:
-        task_ids: Task ID from which to pull return value.
         context: Airflow context.
 
     Returns:
         ID of task to run.
     """
-    has_results = context["task_instance"].xcom_pull(task_ids=task_ids, key="return_value")
+    has_results = context["task_instance"].xcom_pull(
+        task_ids="extract_nyt_reviews", key="return_value"
+    )
     return "run_tests_raw_nyt_reviews" if has_results else "skip_tests_raw_nyt_reviews"
+
+
+def _branch_nyt_copy(**context: Any) -> str:
+    """Branch for copying.
+
+    Skip the copy if there are no new reviews available.
+
+    Args:
+        context: Airflow context.
+
+    Returns:
+        ID of task to run.
+    """
+    has_results = context["task_instance"].xcom_pull(
+        task_ids="extract_nyt_reviews", key="return_value"
+    )
+    return "copy_raw_nyt_table" if has_results else "skip_copy_raw_nyt_table"
 
 
 def _branch_imdb_tests(**context: Any) -> List[str]:
@@ -184,5 +202,31 @@ def _branch_imdb_tests(**context: Any) -> List[str]:
             next_tasks.append(f"run_tests_raw_imdb_{tbl_suffix}")
         else:
             next_tasks.append(f"skip_tests_raw_imdb_{tbl_suffix}")
+
+    return next_tasks
+
+
+def _branch_imdb_copy(**context: Any) -> List[str]:
+    """Branch for copying IMDB datasets.
+
+    Skip the copy if there are no new records available.
+
+    Args:
+        context: Airflow context.
+
+    Returns:
+        IDs of tasks to run.
+    """
+    dumped_tbls = context["task_instance"].xcom_pull(
+        task_ids="extract_imdb_datasets", key="return_value"
+    )
+
+    next_tasks = []
+    for tbl in IMDB_TABLES:
+        tbl_suffix = tbl.replace("title.", "")
+        if tbl in dumped_tbls:
+            next_tasks.append(f"copy_raw_imdb_{tbl_suffix}_table")
+        else:
+            next_tasks.append(f"skip_copy_raw_imdb_{tbl_suffix}_table")
 
     return next_tasks

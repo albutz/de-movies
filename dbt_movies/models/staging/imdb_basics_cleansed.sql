@@ -1,3 +1,10 @@
+{{
+    config(
+        materialized='incremental',
+        unique_key='id'
+    )
+}}
+
 {% set genres_list = [
     "Comedy",
     "War",
@@ -57,6 +64,7 @@ imdb_ratings AS (
 
 SELECT 
     id,
+    CURRENT_TIMESTAMP() AS updated_at,
     primary_title,
     original_title,
     is_adult,
@@ -74,4 +82,9 @@ FROM
     imdb_basics_cleansed
 WHERE
     id IN (SELECT id FROM imdb_ratings)
+-- The updated_at field will be updated with every run, but all other fields
+-- and new records will be updated / inserted incrementally
+{% if is_incremental() %}
+    AND updated_at > (SELECT MAX(updated_at) FROM {{ this }})
+{% endif %}
 

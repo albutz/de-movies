@@ -24,11 +24,28 @@ models:
         description: Unique identifier for the movie in IMDB.
         tests:
           - not_null
+          - relationships:
+              to: ref('imdb_basics_cleansed')
+              field: id
       - name: average_rating
         description: Mean rating.
         tests:
           - not_null
       - name: num_votes
         description: Number of votes.
+        tests:
+          - not_null
+
+  - name: imdb_basics_cleansed
+    columns:
+      - name: id
+        description: Unique identifier for the movie in IMDB.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('imdb_ratings_cleansed')
+              field: id
+      - name: primary_title
+        description: Name of the movie.
         tests:
           - not_null

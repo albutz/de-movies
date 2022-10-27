@@ -9,7 +9,10 @@ SELECT
     $1:display_title::STRING AS movie_title,
     $1:headline::STRING AS review_headline,
     $1:link.url::STRING AS review_url,
-    $1:mpaa_rating::STRING AS mpaa_rating,
+    CASE 
+        WHEN $1:mpaa_rating::STRING = '' THEN NULL
+        ELSE $1:mpaa_rating::STRING
+    END AS mpaa_rating,
     $1:multimedia.src::STRING AS image_url,
     $1:opening_date::DATE AS opening_date,
     $1:publication_date::DATE AS review_date,

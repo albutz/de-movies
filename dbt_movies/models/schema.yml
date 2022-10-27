@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: nyt_reviews_cleansed
+    description: Incremental table with NYT movie reviews.
+    columns:
+      - name: movie_title
+        description: Name of the movie.
+        tests:
+          - not_null
+      - name: mpaa_rating
+        description: Rating for target age.
+        tests:
+          - accepted_values:
+              values: ['G', 'PG', 'PG-13', 'R', 'NC-17'] 
+      - name: opening_date
+        description: Release date of the movie.
+        tets:
+          - not_null

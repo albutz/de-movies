@@ -33,7 +33,8 @@
 WITH imdb_basics AS (
     SELECT * 
     FROM {{ source('movies', 'imdb_basics') }} 
-    WHERE title_type = 'movie'
+    WHERE 
+        title_type = 'movie' AND start_year <= YEAR(CURRENT_TIMESTAMP()) + 1
 ),
 imdb_basics_cleansed AS (
     SELECT

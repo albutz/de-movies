@@ -50,6 +50,9 @@ imdb_basics_cleansed AS (
         SPLIT(genres, ',') AS genres_array
     FROM
         imdb_basics
+),
+imdb_ratings AS (
+    SELECT * FROM {{ source('movies', 'imdb_ratings') }}
 )
 
 SELECT 
@@ -69,4 +72,6 @@ SELECT
     genres_array
 FROM
     imdb_basics_cleansed
+WHERE
+    id IN (SELECT id FROM imdb_ratings)
 

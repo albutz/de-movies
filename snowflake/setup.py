@@ -113,7 +113,7 @@ def main() -> None:
         CREATE OR REPLACE STAGE MOVIES.STAGES.s3_nyt
             URL = '{config['airflow']['s3_bucket']}/nyt/'
             STORAGE_INTEGRATION = s3_int
-            FILE_FORMAT = (TYPE = JSON);
+            FILE_FORMAT = (TYPE = JSON, STRIP_OUTER_ARRAY = TRUE);
     """
 
     output_file = root_dir / "snowflake" / "snowflake_setup.txt"

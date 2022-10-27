@@ -96,7 +96,7 @@ with DAG(
         database="MOVIES",
         warehouse="COMPUTE_WH",
         stage="MOVIES.STAGES.s3_nyt",
-        file_format="(TYPE = JSON)",
+        file_format="(TYPE = JSON, STRIP_OUTER_ARRAY = TRUE)",
     )
 
     skip_copy_raw_nyt_table = EmptyOperator(task_id="skip_copy_raw_nyt_table")

@@ -17,3 +17,18 @@ models:
         description: Release date of the movie.
         tets:
           - not_null
+
+  - name: imdb_ratings_cleansed
+    columns:
+      - name: id
+        description: Unique identifier for the movie in IMDB.
+        tests:
+          - not_null
+      - name: average_rating
+        description: Mean rating.
+        tests:
+          - not_null
+      - name: num_votes
+        description: Number of votes.
+        tests:
+          - not_null

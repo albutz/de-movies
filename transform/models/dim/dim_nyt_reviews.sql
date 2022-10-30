@@ -20,6 +20,7 @@ unique_reviews AS (
 
 SELECT
     {{ dbt_utils.surrogate_key(['author_name', 'movie_title', 'review_date']) }} AS id,
+    review_date,
     review_headline AS headline,
     review_url AS url,
     summary_short AS summary,

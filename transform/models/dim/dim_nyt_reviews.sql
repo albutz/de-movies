@@ -19,15 +19,21 @@ unique_reviews AS (
 )
 
 SELECT
-    {{ dbt_utils.surrogate_key(['headline', 'date']) }} AS id,
-    *
+    {{ dbt_utils.surrogate_key(['author_name', 'movie_title', 'review_date']) }} AS id,
+    review_headline AS headline,
+    review_url AS url,
+    summary_short AS summary,
+    is_critics_pick
 FROM (
     SELECT
-        x.review_headline AS headline,
-        review_url AS url,
-        summary_short AS summary,
-        x.review_date AS date,
-        is_critics_pick
+        x.review_headline AS review_headline,
+        review_url,
+        summary_short,
+        x.review_date AS review_date,
+        is_critics_pick,
+        -- additional cols for surrogate_key
+        author_name,
+        movie_title
     FROM 
         unique_reviews x
         JOIN nyt_reviews y

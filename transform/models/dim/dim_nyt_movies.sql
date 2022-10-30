@@ -19,13 +19,18 @@ unique_movies AS (
 )
 
 SELECT 
-    {{ dbt_utils.surrogate_key(['name', 'date']) }} AS id,
-    *
+    {{ dbt_utils.surrogate_key(['author_name', 'movie_title', 'review_date']) }} AS id,
+    movie_title AS name,
+    opening_date,
+    mpaa_rating
 FROM (
     SELECT 
-        x.movie_title AS name,
-        x.opening_date AS date,
-        mpaa_rating
+        x.movie_title AS movie_title,
+        x.opening_date AS opening_date,
+        mpaa_rating,
+        -- additional cols for surrogate_key
+        author_name,
+        review_date
     FROM 
         unique_movies x
         JOIN nyt_reviews y

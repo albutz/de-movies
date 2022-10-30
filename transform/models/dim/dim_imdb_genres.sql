@@ -7,11 +7,11 @@ WITH genres AS (
 )
 
 SELECT
-    {{ dbt_utils.surrogate_key(['genre']) }} AS id,
-    genre
+    {{ dbt_utils.surrogate_key(['value']) }} AS id,
+    value::STRING AS genre
 FROM (
     SELECT
-        DISTINCT value AS genre
+        DISTINCT value
     FROM
         genres, 
         TABLE(FLATTEN(genres.genres_array)))
@@ -20,5 +20,5 @@ WHERE
     id NOT IN (SELECT id FROM {{ this }})
 {% endif %}
 ORDER BY
-    genre
+    value
 

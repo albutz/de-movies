@@ -50,26 +50,24 @@ models:
         tests:
           - not_null
 
-  - name: dim_imdb_genres
-    columns:
-      - name: genre
-        description: Name of the genre.
-        tests:
-          - unique
-          - not_null
-
   - name: dim_nyt_authors
     columns:
-      - name: name
-        description: Name of the review author.
+      - name: id
+        description: Unique identifier for NYT movies, reviews and authors.
         tests:
-          - unique
+          - relationships:
+              to: ref('dim_nyt_reviews')
+              field: id
+              to: ref('dim_nyt_movies')
+              field: id
 
   - name: dim_nyt_movies
     columns:
       - name: id
-        description: Unique identifier for NYT movies and reviews.
+        description: Unique identifier for NYT movies, reviews and authors.
         tests:
           - relationships: 
               to: ref('dim_nyt_reviews')
+              field: id
+              to: ref('dim_nyt_authors')
               field: id

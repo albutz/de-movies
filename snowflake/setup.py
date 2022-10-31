@@ -95,6 +95,7 @@ def main() -> None:
         USE ROLE airflow;
 
         -- File formats
+        CREATE OR REPLACE SCHEMA MOVIES.FILE_FORMATS;
         CREATE OR REPLACE FILE FORMAT MOVIES.FILE_FORMATS.csv_file
             TYPE = CSV
             COMPRESSION = GZIP

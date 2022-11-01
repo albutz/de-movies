@@ -7,6 +7,12 @@ from airflow.providers.amazon.aws.transfers.local_to_s3 import LocalFilesystemTo
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
 from airflow.providers.snowflake.transfers.s3_to_snowflake import S3ToSnowflakeOperator
 from airflow.utils.dates import days_ago
+from airflow_dbt.operators.dbt_operator import (
+    DbtDepsOperator,
+    DbtRunOperator,
+    DbtSnapshotOperator,
+    DbtTestOperator,
+)
 from extract import (
     _branch_imdb_copy,
     _branch_imdb_tests,
@@ -17,6 +23,9 @@ from extract import (
 )
 from ge_extract import _runtime_batch_request
 from great_expectations_provider.operators.great_expectations import GreatExpectationsOperator
+
+DBT_DIR = "/opt/airflow/transform"
+DBT_PROFILES_DIR = "/opt/airflow/transform/profiles"
 
 with DAG(
     dag_id="movie_dag",
@@ -96,7 +105,7 @@ with DAG(
         database="MOVIES",
         warehouse="COMPUTE_WH",
         stage="MOVIES.STAGES.s3_nyt",
-        file_format="(TYPE = JSON)",
+        file_format="(TYPE = JSON, STRIP_OUTER_ARRAY = TRUE)",
     )
 
     skip_copy_raw_nyt_table = EmptyOperator(task_id="skip_copy_raw_nyt_table")
@@ -233,6 +242,31 @@ with DAG(
         task_id="combine_copy_raw_imdb_tables", trigger_rule="none_failed"
     )
 
+    # Transform
+    dbt_deps = DbtDepsOperator(
+        task_id="dbt_deps",
+        dir=DBT_DIR,
+        profiles_dir=DBT_PROFILES_DIR,
+    )
+
+    dbt_snapshot = DbtSnapshotOperator(
+        task_id="dbt_snapshot",
+        dir=DBT_DIR,
+        profiles_dir=DBT_PROFILES_DIR,
+    )
+
+    dbt_run = DbtRunOperator(
+        task_id="dbt_run",
+        dir=DBT_DIR,
+        profiles_dir=DBT_PROFILES_DIR,
+    )
+
+    dbt_test = DbtTestOperator(
+        task_id="dbt_test",
+        dir=DBT_DIR,
+        profiles_dir=DBT_PROFILES_DIR,
+    )
+
     extract_nyt_reviews >> branch_test_load_raw_nyt_reviews
     branch_test_load_raw_nyt_reviews >> [run_tests_raw_nyt_reviews, skip_tests_raw_nyt_reviews]
     run_tests_raw_nyt_reviews >> load_nyt_reviews_to_s3
@@ -274,3 +308,5 @@ with DAG(
         skip_copy_raw_imdb_basics_table,
         skip_copy_raw_imdb_ratings_table,
     ] >> combine_copy_raw_imdb_tables
+    [combine_copy_raw_nyt_table, combine_copy_raw_imdb_tables] >> dbt_deps
+    dbt_deps >> dbt_snapshot >> dbt_run >> dbt_test

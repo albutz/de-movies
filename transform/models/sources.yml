@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: movies
+    schema: raw
+    tables:
+      - name: nyt
+        identifier: raw_nyt_reviews
+      - name: imdb_basics
+        identifier: raw_imdb_basics
+      - name: imdb_ratings
+        identifier: raw_imdb_ratings

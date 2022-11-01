@@ -66,6 +66,8 @@ x-airflow-common:
     - ./plugins:/opt/airflow/plugins
     - ./data:/opt/airflow/data
     - ./great_expectations:/opt/airflow/great_expectations
+    - ./transform:/opt/airflow/transform
+    - ~/.dbt:/opt/airflow/transform/profiles
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on

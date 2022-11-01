@@ -1,0 +1,73 @@
+version: 2
+
+models:
+  - name: nyt_reviews_cleansed
+    description: Incremental table with NYT movie reviews.
+    columns:
+      - name: movie_title
+        description: Name of the movie.
+        tests:
+          - not_null
+      - name: mpaa_rating
+        description: Rating for target age.
+        tests:
+          - accepted_values:
+              values: ['G', 'PG', 'PG-13', 'R', 'NC-17'] 
+      - name: opening_date
+        description: Release date of the movie.
+        tets:
+          - not_null
+
+  - name: imdb_ratings_cleansed
+    columns:
+      - name: id
+        description: Unique identifier for the movie in IMDB.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('imdb_basics_cleansed')
+              field: id
+      - name: average_rating
+        description: Mean rating.
+        tests:
+          - not_null
+      - name: num_votes
+        description: Number of votes.
+        tests:
+          - not_null
+
+  - name: imdb_basics_cleansed
+    columns:
+      - name: id
+        description: Unique identifier for the movie in IMDB.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('imdb_ratings_cleansed')
+              field: id
+      - name: primary_title
+        description: Name of the movie.
+        tests:
+          - not_null
+
+  - name: dim_nyt_authors
+    columns:
+      - name: id
+        description: Unique identifier for NYT movies, reviews and authors.
+        tests:
+          - relationships:
+              to: ref('dim_nyt_reviews')
+              field: id
+              to: ref('dim_nyt_movies')
+              field: id
+
+  - name: dim_nyt_movies
+    columns:
+      - name: id
+        description: Unique identifier for NYT movies, reviews and authors.
+        tests:
+          - relationships: 
+              to: ref('dim_nyt_reviews')
+              field: id
+              to: ref('dim_nyt_authors')
+              field: id

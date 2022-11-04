@@ -24,9 +24,6 @@ models:
         description: Unique identifier for the movie in IMDB.
         tests:
           - not_null
-          - relationships:
-              to: ref('imdb_basics_cleansed')
-              field: id
       - name: average_rating
         description: Mean rating.
         tests:
@@ -42,32 +39,8 @@ models:
         description: Unique identifier for the movie in IMDB.
         tests:
           - not_null
-          - relationships:
-              to: ref('imdb_ratings_cleansed')
-              field: id
       - name: primary_title
         description: Name of the movie.
         tests:
           - not_null
 
-  - name: dim_nyt_authors
-    columns:
-      - name: id
-        description: Unique identifier for NYT movies, reviews and authors.
-        tests:
-          - relationships:
-              to: ref('dim_nyt_reviews')
-              field: id
-              to: ref('dim_nyt_movies')
-              field: id
-
-  - name: dim_nyt_movies
-    columns:
-      - name: id
-        description: Unique identifier for NYT movies, reviews and authors.
-        tests:
-          - relationships: 
-              to: ref('dim_nyt_reviews')
-              field: id
-              to: ref('dim_nyt_authors')
-              field: id

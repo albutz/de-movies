@@ -4,20 +4,23 @@
 
 WITH genres AS (
     SELECT  
-        id, 
-        genres_array 
+        DISTINCT genres_array 
     FROM 
         {{ ref('imdb_basics_cleansed') }}
 )
 
 SELECT
-    id,
-    value::STRING AS genre
+    {{ dbt_utils.surrogate_key(['genre']) }} AS id,
+    genre::STRING AS genre
 FROM
-    genres,
-    TABLE(FLATTEN(genres.genres_array))
+    (
+        SELECT
+            DISTINCT value AS genre
+        FROM
+            genres,
+            TABLE(FLATTEN(genres.genres_array))
+    )
 {% if is_incremental() %}
 WHERE
     id NOT IN (SELECT id FROM {{ this }})
 {% endif %}
-

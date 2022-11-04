@@ -7,16 +7,14 @@ WITH nyt_reviews AS (
 ),
 author_names AS (
     SELECT 
-        author_name,
-        movie_title,
-        review_date
+        DISTINCT author_name AS name
     FROM 
         nyt_reviews
 )
 
 SELECT 
-    {{ dbt_utils.surrogate_key(['author_name', 'movie_title', 'review_date']) }} AS id,
-    author_name AS name
+    {{ dbt_utils.surrogate_key(['name']) }} AS id,
+    name
 FROM 
     author_names
 {% if is_incremental() %}

@@ -14,7 +14,8 @@ imdb_basics_unique AS (
     GROUP BY
         primary_title,
         year
-    HAVING COUNT(*) = 1
+    HAVING 
+        COUNT(*) = 1
 )
 
 SELECT

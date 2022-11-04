@@ -28,10 +28,10 @@ On a high level, the individual tasks are
 
 The lineage graph in dbt is shown below.
 
-<img width="1812" alt="dbt_lineage" src="https://user-images.githubusercontent.com/60711201/199124679-c4752c09-186a-4b02-a03f-f6b1e68664f6.png">
+<img width="1477" alt="dbt_lineage" src="https://user-images.githubusercontent.com/60711201/200029812-fcdd043a-136a-4b9c-b4fa-3525a167bd71.png">
 
 - Snapshots of the source data via `dbt snapshot` allow to track ratings and reviews over time.
-- The transformation step (`dbt run`) builds dimensional tables and a fact table that combines IMDB ratings and NYT reviews. A data mart is built to analyze ratings and reviews by genre over time and can serve downstream BI applications.
+- The transformation step (`dbt run`) builds dimensional tables and a fact table that combines IMDB ratings and NYT reviews.
 - Tables and views are covered with data quality tests via `dbt test`.
 
 ## Usage
